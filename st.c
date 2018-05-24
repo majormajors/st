@@ -256,10 +256,10 @@ xwrite(int fd, const char *s, size_t len)
 void *
 xmalloc(size_t len)
 {
-	void *p;
+	void *p = malloc(len);
 
-	if (!(p = malloc(len)))
-		die("malloc: %s\n", strerror(errno));
+	if (!p)
+		die("Out of memory\n");
 
 	return p;
 }
@@ -268,7 +268,7 @@ void *
 xrealloc(void *p, size_t len)
 {
 	if ((p = realloc(p, len)) == NULL)
-		die("realloc: %s\n", strerror(errno));
+		die("Out of memory\n");
 
 	return p;
 }
@@ -277,7 +277,7 @@ char *
 xstrdup(char *s)
 {
 	if ((s = strdup(s)) == NULL)
-		die("strdup: %s\n", strerror(errno));
+		die("Out of memory\n");
 
 	return s;
 }
@@ -446,7 +446,6 @@ selstart(int col, int row, int snap)
 	selclear();
 	sel.mode = SEL_EMPTY;
 	sel.type = SEL_REGULAR;
-	sel.alt = IS_SET(MODE_ALTSCREEN);
 	sel.snap = snap;
 	sel.oe.x = sel.ob.x = col;
 	sel.oe.y = sel.ob.y = row;
@@ -475,6 +474,7 @@ selextend(int col, int row, int type, int done)
 	oldsey = sel.ne.y;
 	oldtype = sel.type;
 
+	sel.alt = IS_SET(MODE_ALTSCREEN);
 	sel.oe.x = col;
 	sel.oe.y = row;
 	selnormalize();
@@ -687,7 +687,7 @@ execsh(char *cmd, char **args)
 	errno = 0;
 	if ((pw = getpwuid(getuid())) == NULL) {
 		if (errno)
-			die("getpwuid: %s\n", strerror(errno));
+			die("getpwuid:%s\n", strerror(errno));
 		else
 			die("who are you?\n");
 	}
@@ -730,7 +730,7 @@ sigchld(int a)
 	pid_t p;
 
 	if ((p = waitpid(pid, &stat, WNOHANG)) < 0)
-		die("waiting for pid %hd failed: %s\n", pid, strerror(errno));
+		die("Waiting for pid %hd failed: %s\n", pid, strerror(errno));
 
 	if (pid != p)
 		return;
@@ -781,8 +781,7 @@ ttynew(char *line, char *cmd, char *out, char **args)
 
 	if (line) {
 		if ((cmdfd = open(line, O_RDWR)) < 0)
-			die("open line '%s' failed: %s\n",
-			    line, strerror(errno));
+			die("open line failed: %s\n", strerror(errno));
 		dup2(cmdfd, 0);
 		stty(args);
 		return cmdfd;
@@ -794,7 +793,7 @@ ttynew(char *line, char *cmd, char *out, char **args)
 
 	switch (pid = fork()) {
 	case -1:
-		die("fork failed: %s\n", strerror(errno));
+		die("fork failed\n");
 		break;
 	case 0:
 		close(iofd);
@@ -827,7 +826,7 @@ ttyread(void)
 
 	/* append read bytes to unprocessed bytes */
 	if ((ret = read(cmdfd, buf+buflen, LEN(buf)-buflen)) < 0)
-		die("couldn't read from shell: %s\n", strerror(errno));
+		die("Couldn't read from shell: %s\n", strerror(errno));
 	buflen += ret;
 
 	written = twrite(buf, buflen, 0);
