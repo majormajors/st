@@ -135,6 +135,13 @@ static unsigned int defaultcs = 14;
 static unsigned int defaultrcs = 15;
 
 /*
+ * show urls in a dmenu
+ */
+static char *openurlcmd[] = { "/bin/sh", "-c",
+    "grep http | grep -shoP 'http.*?[\" >]' | dmenu -l 10 | xargs -r xdg-open",
+    "externalpipe", NULL };
+
+/*
  * Default shape of cursor
  * 2: Block ("█")
  * 4: Underline ("_")
@@ -190,6 +197,7 @@ static Shortcut shortcuts[] = {
 	{ TERMMOD,              XK_V,           clippaste,      {.i =  0} },
 	{ TERMMOD,              XK_Y,           selpaste,       {.i =  0} },
 	{ TERMMOD,              XK_Num_Lock,    numlock,        {.i =  0} },
+  { TERMMOD,              XK_O,           externalpipe,   {.v = openurlcmd } },
 	{ XK_ANY_MOD,           XK_F6,          swapcolors,     {.i =  0} },
 };
 
